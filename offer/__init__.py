@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from core.config import settings
-from offer.view import router
+from offer.views.offer_view import router
 
 offer_router = APIRouter(
     prefix=settings.api.prefix,
