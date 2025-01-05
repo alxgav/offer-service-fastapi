@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.exc import NoResultFound
@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
 from core.db.db_helper import db_helper
+from offer.models.offer import Offer
 from offer.schemas.offer import ReadOffer, CreateOffer
+from offer.services.dependencies import get_offer_by_id
+
 from offer.services.services import (
     get_offers,
-    get_offer,
     create_offer,
     delete_offer,
     update_offer,
@@ -72,51 +74,31 @@ async def get_all_offers(
     status_code=status.HTTP_200_OK,
 )
 async def get_offer_by_id(
-    offer_id: Annotated[
-        uuid.UUID, Query(..., description="The UUID of the offer to get")
-    ],
-    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+    offer_id: Annotated[uuid.UUID, Query(..., description="Offer ID")],
+    offer: Annotated[Offer, Depends(get_offer_by_id)],
 ):
-    try:
-        offer = await get_offer(session, offer_id)
-        return offer
-    except NoResultFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Offer with ID {offer_id} not found.",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred while getting the offer: {e}",
-        )
-    # return offer
+    return offer
 
 
 @router.delete(
     "/",
-    description="delete offers",
-    name="delete offers",
+    description="delete offer",
+    name="delete offer",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete(
-    offer_id: Annotated[
-        uuid.UUID, Query(..., description="The UUID of the offer to delete")
-    ],
+    offer_id: Annotated[uuid.UUID, Query(..., description="Offer ID")],
+    offer: Annotated[Offer, Depends(get_offer_by_id)],
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
 ):
     try:
-        await delete_offer(session, offer_id)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
+        await delete_offer(offer=offer, session=session)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while deleting the offer.",
+            detail=f"An error occurred while getting offers: {e}",
         )
+    return
 
 
 @router.patch(
@@ -128,14 +110,15 @@ async def delete(
     status_code=status.HTTP_200_OK,
 )
 async def update(
-    offer_id: Annotated[
-        uuid.UUID, Query(..., description="The UUID of the offer to update")
-    ],
-    offer_update: CreateOffer,
+    offer_id: Annotated[uuid.UUID, Query(..., description="Offer ID")],
+    offer: Annotated[Offer, Depends(get_offer_by_id)],
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+    offer_update: CreateOffer,
 ):
     try:
-        offer = await update_offer(session, offer_id, offer_update)
+        offer = await update_offer(
+            offer=offer, session=session, offer_update=offer_update
+        )
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
