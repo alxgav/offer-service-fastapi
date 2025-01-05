@@ -30,28 +30,30 @@ class Offer(UUIDPkMixin, CreatedAtMixin, Base):
         cascade="all, delete-orphan",
     )
 
-    # price_details: Mapped[list["OfferPriceDetails"]] = relationship(
-    #     "OfferPriceDetails", back_populates="offer"
-    # )
-    # type:# Mapped[list["OfferType"]] = relationship("OfferType", back_populates="offers")
-    # offer_locations: Mapped["OfferLocationDetail"] = relationship(
-    #     "OfferLocationDetail", back_populates="offer"
-    # )
-    # requests: Mapped["OfferRequest"] = relationship(
-    #     "OfferRequest", back_populates="offer"
-    # )
-    # ratings: Mapped["OfferRating"] = relationship("OfferRating", back_populates="offer")
+    price_details: Mapped[list["OfferPriceDetails"]] = relationship(
+        "OfferPriceDetails", back_populates="offer", cascade="all, delete-orphan"
+    )
+    type: Mapped[list["OfferType"]] = relationship(
+        "OfferType", back_populates="offers", cascade="all, delete-orphan"
+    )
+    requests: Mapped[list["OfferRequest"]] = relationship(
+        "OfferRequest", back_populates="offer", cascade="all, delete-orphan"
+    )
+    ratings: Mapped[list["OfferRating"]] = relationship(
+        "OfferRating", back_populates="offer", cascade="all, delete-orphan"
+    )
 
 
-# class OfferPriceDetails(UUIDPkMixin, Base):
-#     offer_id: Mapped[uuid.UUID] = mapped_column(
-#         ForeignKey(Offer.id, ondelete="CASCADE")
-#     )
-#     caption: Mapped[str]
-#     description: Mapped[str]
-#     price: Mapped[float]
-#     image: Mapped[str]
-#     offer: Mapped[Offer] = relationship("Offer", back_populates="price_details")
+class OfferPriceDetails(UUIDPkMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "price_details"
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
+    caption: Mapped[str]
+    description: Mapped[str]
+    price: Mapped[float]
+    image: Mapped[str]
+    # offer: Mapped[Offer] = relationship("Offer", back_populates="price_details")
+
+
 #
 #
 class OfferOption(UUIDPkMixin, OfferRelationMixin, Base):
@@ -77,33 +79,30 @@ class OfferLocationDetail(UUIDPkMixin, OfferRelationMixin, Base):
     radius: Mapped[int] = mapped_column(default=0)
 
 
+class OfferType(UUIDPkMixin, CreatedAtMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "type"
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
+    name: Mapped[str]
+    description: Mapped[str]
+    # offer: Mapped[Offer] = relationship("Offer", back_populates="type")
+
+
 #
 #
-# class OfferType(UUIDPkMixin, CreatedAtMixin, Base):
-#     offer_id: Mapped[uuid.UUID] = mapped_column(
-#         ForeignKey(Offer.id, ondelete="CASCADE")
-#     )
-#     name: Mapped[str]
-#     description: Mapped[str]
-#     offer: Mapped[Offer] = relationship("Offer", back_populates="type")
-#
-#
-# class OfferRequest(UUIDPkMixin, Base):
-#     offer_id: Mapped[uuid.UUID] = mapped_column(
-#         ForeignKey(Offer.id, ondelete="CASCADE")
-#     )
-#     offer: Mapped[Offer] = relationship("Offer", back_populates="requests")
-#     request_made_at: Mapped[datetime]
-#     request_made_by: Mapped[str]
-#     price_detail_id: Mapped[int]
-#     request_status: Mapped[int]
-#
-#
-# class OfferRating(UUIDPkMixin, CreatedAtMixin, Base):
-#     offer_id: Mapped[uuid.UUID] = mapped_column(
-#         ForeignKey(Offer.id, ondelete="CASCADE")
-#     )
-#     offer: Mapped[Offer] = relationship("Offer", back_populates="ratings")
-#     caption: Mapped[str]
-#     description: Mapped[str]
-#     rating: Mapped[float] = mapped_column(default=0.0, nullable=False)
+class OfferRequest(UUIDPkMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "requests"
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
+    # offer: Mapped[Offer] = relationship("Offer", back_populates="requests")
+    request_made_at: Mapped[datetime]
+    request_made_by: Mapped[str]
+    price_detail_id: Mapped[int]
+    request_status: Mapped[int]
+
+
+class OfferRating(UUIDPkMixin, CreatedAtMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "ratings"
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
+    # offer: Mapped[Offer] = relationship("Offer", back_populates="ratings")
+    caption: Mapped[str]
+    description: Mapped[str]
+    rating: Mapped[float] = mapped_column(default=0.0, nullable=False)
