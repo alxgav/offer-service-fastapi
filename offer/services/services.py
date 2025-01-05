@@ -64,7 +64,7 @@ async def update_offer(
 ) -> Offer:
 
     if offer:
-        offer_dict = offer_update.model_dump(exclude={"offer_option"})
+        offer_dict = offer_update.model_dump(exclude={"offer_option", "offer_location"})
         for key, value in offer_dict.items():
             setattr(offer, key, value)
 
