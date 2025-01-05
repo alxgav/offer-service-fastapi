@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.db.base import Base
 from core.db.mixins.create_at_mixin import CreatedAtMixin
 from core.db.mixins.id_mixin import UUIDPkMixin
+from offer.models.mixins.OfferRelationMixin import OfferRelationMixin
 
 
 class Offer(UUIDPkMixin, CreatedAtMixin, Base):
@@ -18,6 +19,12 @@ class Offer(UUIDPkMixin, CreatedAtMixin, Base):
     description: Mapped[str]
     offer_option: Mapped["OfferOption"] = relationship(
         "OfferOption",
+        back_populates="offer",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    offer_location: Mapped["OfferLocationDetail"] = relationship(
+        "OfferLocationDetail",
         back_populates="offer",
         uselist=False,
         cascade="all, delete-orphan",
@@ -47,30 +54,29 @@ class Offer(UUIDPkMixin, CreatedAtMixin, Base):
 #     offer: Mapped[Offer] = relationship("Offer", back_populates="price_details")
 #
 #
-class OfferOption(UUIDPkMixin, Base):
-    __table_args__ = {"schema": "offer", "extend_existing": True}
+class OfferOption(UUIDPkMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "offer_option"
     offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
     is_temporary: Mapped[bool]
     temporary_to: Mapped[datetime] = mapped_column(default=func.now())
-    offer: Mapped[Offer] = relationship("Offer", back_populates="offer_option")
 
 
-# class OfferLocationDetail(UUIDPkMixin, Base):
-#     offer_id: Mapped[uuid.UUID] = mapped_column(
-#         ForeignKey(Offer.id, ondelete="CASCADE")
-#     )
-#
-#     location_text: Mapped[str]
-#     lat: Mapped[float] = mapped_column(default=0.0)
-#     lng: Mapped[float] = mapped_column(default=0.0)
-#     street_name: Mapped[str] = mapped_column(default="")
-#     house_number: Mapped[str] = mapped_column(default="")
-#     zip_code: Mapped[int]
-#     city: Mapped[str] = mapped_column(default="")
-#     country: Mapped[str] = mapped_column(default="")
-#     federal_state: Mapped[str] = mapped_column(default="")
-#     radius: Mapped[int] = mapped_column(default=0)
-#     offer: Mapped[Offer] = relationship("Offer", back_populates="locations")
+class OfferLocationDetail(UUIDPkMixin, OfferRelationMixin, Base):
+    _offer_back_populates = "offer_location"
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(Offer.id))
+
+    location_text: Mapped[str]
+    lat: Mapped[float] = mapped_column(default=0.0)
+    lng: Mapped[float] = mapped_column(default=0.0)
+    street_name: Mapped[str] = mapped_column(default="")
+    house_number: Mapped[str] = mapped_column(default="")
+    zip_code: Mapped[int]
+    city: Mapped[str] = mapped_column(default="")
+    country: Mapped[str] = mapped_column(default="")
+    federal_state: Mapped[str] = mapped_column(default="")
+    radius: Mapped[int] = mapped_column(default=0)
+
+
 #
 #
 # class OfferType(UUIDPkMixin, CreatedAtMixin, Base):
@@ -101,7 +107,3 @@ class OfferOption(UUIDPkMixin, Base):
 #     caption: Mapped[str]
 #     description: Mapped[str]
 #     rating: Mapped[float] = mapped_column(default=0.0, nullable=False)
-
-
-# Offer.options: Mapped[list[OfferOption]] = relationship("OfferOption", back_populates="offer")
-# Offer.locations: Mapped[list[OfferLocationDetail]] = relationship("OfferLocationDetails", back_populates="offer")

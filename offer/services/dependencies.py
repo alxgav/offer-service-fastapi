@@ -16,7 +16,7 @@ async def get_offer_by_id(
     stmt = (
         select(Offer)
         .where(Offer.id == offer_id)
-        .options(selectinload(Offer.offer_option))
+        .options(selectinload(Offer.offer_option), selectinload(Offer.offer_location))
     )
     result = await session.execute(stmt)
     offer = result.scalars().first()
